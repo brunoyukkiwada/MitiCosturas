@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mitiCosturas</title>
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f9f9f9}
+body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f9f9f9}
 header{background:#ffcccb;padding:20px;text-align:center}
 header img{width:120px;border-radius:10px}
 main{padding:20px}
@@ -14,12 +14,9 @@ main{padding:20px}
 .produto img{width:100%;border-radius:10px}
 button{margin-top:10px;padding:8px 15px;border:none;border-radius:8px;background:#ff6b6b;color:#fff;cursor:pointer}
 button:hover{background:#ff4c4c}
-input{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;margin-bottom:10px}
 #carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s;z-index:1000}
 #carrinhoLateral h2{margin-top:0}
 #abrirCarrinhoBtn{position:fixed;top:20px;right:20px;z-index:1001;padding:10px 15px;border:none;border-radius:50%;background:#ff6b6b;color:#fff;font-size:18px}
-#telaLogin{position:fixed;inset:0;background:#fff;display:flex;justify-content:center;align-items:center;z-index:5000}
-#telaLogin div{background:#fff;padding:30px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,.2);width:300px}
 </style>
 </head>
 <body>
@@ -28,16 +25,9 @@ input{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;margin-bott
 <h1>mitiCosturas</h1>
 </header>
 <main>
-<h2>Adicionar Produto</h2>
-<div id="adminArea" style="background:#fff;padding:15px;border-radius:10px;max-width:400px;margin:0 auto 20px">
-<input type="text" id="nomeProduto" placeholder="Nome do produto">
-<input type="number" id="precoProduto" placeholder="Preço">
-<input type="number" id="estoqueProduto" placeholder="Quantidade em estoque">
-<input type="file" id="imagemProduto" accept="image/*">
-<button onclick="adicionarProduto()">Salvar Produto</button>
-</div>
 <h2>Produtos</h2>
 <div id="produtos" class="produtos"></div>
+
 <div style="margin-top:40px;text-align:center">
 <h2>Fale com a mitiCosturas</h2>
 <img src="qr.png" width="200">
@@ -55,111 +45,31 @@ input{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;margin-bott
 </div>
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
-<!-- Tela de login admin só para Realme C30 -->
-<div id="telaLogin">
-<div>
-<h2>Login Admin</h2>
-<input type="text" id="loginUsuario" placeholder="Usuário">
-<input type="password" id="loginSenha" placeholder="Senha">
-<button onclick="fazerLogin()">Entrar</button>
-</div>
-</div>
-
 <script>
-let usuarioLogado = "cliente";
-const ADMIN_USER = "mitsuko";
-const ADMIN_PASS = "12345miti";
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
 
 function salvarTudo(){
-  localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
   localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
 }
 
-/* ================= LOGIN ================= */
-function fazerLogin(){
-  const user = document.getElementById("loginUsuario").value;
-  const pass = document.getElementById("loginSenha").value;
-  const device = navigator.userAgent || "";
-  if(user === ADMIN_USER && pass === ADMIN_PASS && device.includes("Realme C30")){
-    usuarioLogado = "admin";
-    localStorage.setItem("mitiSessao","admin");
-    iniciarSistema();
-  } else {
-    alert("Acesso restrito a administrador deste dispositivo!");
-  }
-}
-
-function iniciarSistema(){
-  if(usuarioLogado !== "admin"){
-    document.getElementById("adminArea").style.display = "none";
-    document.getElementById("telaLogin").style.display = "none";
-  } else {
-    document.getElementById("adminArea").style.display = "block";
-    document.getElementById("telaLogin").style.display = "none";
-  }
-  carregarProdutos();
-  atualizarCarrinhoLateral();
-}
-
-/* ================= INICIALIZAÇÃO ================= */
-window.onload = function(){
-  const device = navigator.userAgent || "";
-  if(device.includes("Realme C30")){
-    // Administrador vê login
-    document.getElementById("telaLogin").style.display = "flex";
-    document.getElementById("adminArea").style.display = "none";
-  } else {
-    // Clientes não veem login
-    usuarioLogado = "cliente";
-    document.getElementById("telaLogin").style.display = "none";
-    document.getElementById("adminArea").style.display = "none";
-    carregarProdutos();
-    atualizarCarrinhoLateral();
-  }
-}
-
-/* ================= PRODUTOS ================= */
-function adicionarProduto(){
-  if(usuarioLogado !== "admin"){ alert("Acesso restrito!"); return; }
-  const nome = document.getElementById("nomeProduto").value;
-  const preco = document.getElementById("precoProduto").value;
-  const estoque = document.getElementById("estoqueProduto").value;
-  const arquivo = document.getElementById("imagemProduto").files[0];
-  if(!nome||!preco||!estoque||!arquivo){ alert("Preencha todos os campos!"); return; }
-  const reader = new FileReader();
-  reader.onload = function(e){
-    produtos.push({id:Date.now(), nome:nome, preco:parseFloat(preco), estoque:parseInt(estoque), imagem:e.target.result});
-    salvarTudo();
-    carregarProdutos();
-  }
-  reader.readAsDataURL(arquivo);
-}
-
-function removerProduto(id){
-  if(usuarioLogado !== "admin"){ alert("Apenas administrador!"); return; }
-  produtos = produtos.filter(p=>p.id!==id);
-  salvarTudo();
-  carregarProdutos();
-}
-
+// Carregar produtos
 function carregarProdutos(){
   const container = document.getElementById("produtos");
   container.innerHTML="";
   produtos.forEach(produto=>{
     const card = document.createElement("div");
     card.className="produto";
-    let botaoRemover = "";
-    if(usuarioLogado === "admin"){
-      botaoRemover = `<button onclick="removerProduto(${produto.id})" style="background:red;margin-top:5px;">Remover</button>`;
-    }
-    card.innerHTML = `<img src="${produto.imagem}"><h3>${produto.nome}</h3><p>R$ ${produto.preco.toFixed(2)}</p><p>Estoque: ${produto.estoque}</p><button onclick="adicionarAoCarrinho(${produto.id})" ${produto.estoque<=0?'disabled':''}>${produto.estoque<=0?'Esgotado':'Adicionar ao Carrinho'}</button>${botaoRemover}`;
+    card.innerHTML = `<img src="${produto.imagem}">
+                      <h3>${produto.nome}</h3>
+                      <p>R$ ${produto.preco.toFixed(2)}</p>
+                      <p>Estoque: ${produto.estoque}</p>
+                      <button onclick="adicionarAoCarrinho(${produto.id})" ${produto.estoque<=0?'disabled':''}>${produto.estoque<=0?'Esgotado':'Adicionar ao Carrinho'}</button>`;
     container.appendChild(card);
   });
 }
 
-/* ================= CARRINHO ================= */
+// Carrinho
 function adicionarAoCarrinho(id){
   const produto = produtos.find(p=>p.id===id);
   if(!produto||produto.estoque<=0) return;
@@ -204,6 +114,12 @@ function finalizarCompra(){
 
 function abrirCarrinho(){document.getElementById("carrinhoLateral").style.right="0"; atualizarCarrinhoLateral();}
 function fecharCarrinho(){document.getElementById("carrinhoLateral").style.right="-350px";}
+
+// Inicializar
+window.onload = function(){
+  carregarProdutos();
+  atualizarCarrinhoLateral();
+}
 </script>
 </body>
 </html>
