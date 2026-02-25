@@ -103,17 +103,66 @@ input { width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; margi
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
 <script>
+
+let usuarioLogado = null;
+
+const ADMIN_USER = "mitsuko";
+const ADMIN_PASS = "12345miti"; // ALTERE ESSA SENHA
+
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
-
-const produtosContainer = document.getElementById("produtos");
 
 function salvarTudo() {
   localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
   localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
 }
 
+/* ================= LOGIN ================= */
+
+function fazerLogin(){
+  const user = document.getElementById("loginUsuario").value;
+  const pass = document.getElementById("loginSenha").value;
+
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    usuarioLogado = "admin";
+    localStorage.setItem("mitiSessao","admin");
+    iniciarSistema();
+  } 
+  else if(user && pass){
+    usuarioLogado = "cliente";
+    localStorage.setItem("mitiSessao","cliente");
+    iniciarSistema();
+  }
+  else{
+    alert("Login inválido!");
+  }
+}
+
+function iniciarSistema(){
+  document.getElementById("telaLogin").style.display="none";
+  
+  if(usuarioLogado !== "admin"){
+    document.querySelector("h2").style.display="none";
+    document.querySelector("main div").style.display="none";
+  }
+
+  carregarProdutos();
+  atualizarCarrinhoLateral();
+}
+
+window.onload = function(){
+  const sessao = localStorage.getItem("mitiSessao");
+  if(sessao){
+    usuarioLogado = sessao;
+    iniciarSistema();
+  }
+}
+
+/* ================= PRODUTOS ================= */
+
 function adicionarProduto() {
+  if(usuarioLogado !== "admin"){ alert("Acesso restrito!"); return; }
+
   const nome = document.getElementById("nomeProduto").value;
   const preco = document.getElementById("precoProduto").value;
   const estoque = document.getElementById("estoqueProduto").value;
@@ -133,19 +182,29 @@ function adicionarProduto() {
     produtos.push(novoProduto);
     salvarTudo();
     carregarProdutos();
-    document.getElementById("nomeProduto").value = "";
-    document.getElementById("precoProduto").value = "";
-    document.getElementById("estoqueProduto").value = "";
-    document.getElementById("imagemProduto").value = "";
   };
   reader.readAsDataURL(arquivo);
 }
 
+function removerProduto(id) {
+  if(usuarioLogado !== "admin"){ alert("Apenas administrador!"); return; }
+  produtos = produtos.filter(p => p.id !== id);
+  salvarTudo();
+  carregarProdutos();
+}
+
 function carregarProdutos() {
-  produtosContainer.innerHTML = "";
+  const container = document.getElementById("produtos");
+  container.innerHTML = "";
   produtos.forEach(produto => {
     const card = document.createElement("div");
     card.className = "produto";
+
+    let botaoRemover = "";
+    if(usuarioLogado === "admin"){
+      botaoRemover = `<button onclick="removerProduto(${produto.id})" style="background:red;margin-top:5px;">Remover</button>`;
+    }
+
     card.innerHTML = `
       <img src="${produto.imagem}">
       <h3>${produto.nome}</h3>
@@ -154,23 +213,22 @@ function carregarProdutos() {
       <button onclick="adicionarAoCarrinho(${produto.id})" ${produto.estoque<=0?'disabled':''}>
         ${produto.estoque<=0?'Esgotado':'Adicionar ao Carrinho'}
       </button>
-      <button onclick="removerProduto(${produto.id})" style="background:red;color:white;margin-top:5px;">Remover Produto</button>
+      ${botaoRemover}
     `;
-    produtosContainer.appendChild(card);
+    container.appendChild(card);
   });
 }
 
-function removerProduto(id) {
-  produtos = produtos.filter(p => p.id !== id); // remove do catálogo
-  salvarTudo();
-  carregarProdutos();
-}
+/* ================= CARRINHO ================= */
 
 function adicionarAoCarrinho(id) {
   const produto = produtos.find(p=>p.id===id);
   if(!produto||produto.estoque<=0) return;
+
   const item = carrinho.find(p=>p.id===id);
-  if(item){ item.quantidade++; } else { carrinho.push({...produto, quantidade:1}); }
+  if(item){ item.quantidade++; } 
+  else { carrinho.push({...produto, quantidade:1}); }
+
   produto.estoque--;
   salvarTudo();
   carregarProdutos();
@@ -181,6 +239,7 @@ function removerDoCarrinho(id){
   const item = carrinho.find(p=>p.id===id);
   const produto = produtos.find(p=>p.id===id);
   if(!item||!produto) return;
+
   produto.estoque += item.quantidade;
   carrinho = carrinho.filter(p=>p.id!==id);
   salvarTudo();
@@ -188,22 +247,21 @@ function removerDoCarrinho(id){
   atualizarCarrinhoLateral();
 }
 
-function abrirCarrinho(){ document.getElementById("carrinhoLateral").style.right="0"; atualizarCarrinhoLateral(); }
-function fecharCarrinho(){ document.getElementById("carrinhoLateral").style.right="-350px"; }
-
 function atualizarCarrinhoLateral(){
   const container = document.getElementById("itensCarrinhoLateral");
   const totalEl = document.getElementById("totalCarrinhoLateral");
   container.innerHTML="";
   let total =0;
+
   carrinho.forEach(item=>{
     total += item.preco*item.quantidade;
-    const div=document.createElement("div");
-    div.style.marginBottom="10px";
-    div.innerHTML = `${item.nome} x${item.quantidade} - R$ ${(item.preco*item.quantidade).toFixed(2)} 
-      <button onclick="removerDoCarrinho(${item.id})" style="margin-left:5px;">❌</button>`;
-    container.appendChild(div);
+    container.innerHTML += `
+      <div>
+        ${item.nome} x${item.quantidade} - R$ ${(item.preco*item.quantidade).toFixed(2)}
+        <button onclick="removerDoCarrinho(${item.id})">❌</button>
+      </div>`;
   });
+
   totalEl.innerText=total.toFixed(2);
 }
 
@@ -212,15 +270,39 @@ function finalizarCompra(){
   carrinho = [];
   salvarTudo();
   atualizarCarrinhoLateral();
-  carregarProdutos();
   alert("Compra finalizada!");
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
-  carregarProdutos();
-  atualizarCarrinhoLateral();
-});
+/* ================= PROTEÇÃO BÁSICA ================= */
+
+// bloquear botão direito
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// bloquear F12 / DevTools
+document.onkeydown = function(e){
+  if(e.key === "F12") return false;
+  if(e.ctrlKey && e.shiftKey && e.key === "I") return false;
+  if(e.ctrlKey && e.key === "U") return false;
+};
+
+// bloquear console
+setInterval(()=>{
+  const before = new Date().getTime();
+  debugger;
+  const after = new Date().getTime();
+  if(after - before > 100){
+    document.body.innerHTML = "Acesso bloqueado!";
+  }
+},1000);
+
 </script>
 
 </body>
-  </html>
+<div id="telaLogin" style="position:fixed;inset:0;background:#fff;display:flex;justify-content:center;align-items:center;z-index:5000;">
+  <div style="background:#fff;padding:30px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,0.2);width:300px;">
+    <h2>Login mitiCosturas</h2>
+    <input type="text" id="loginUsuario" placeholder="Usuário">
+    <input type="password" id="loginSenha" placeholder="Senha">
+    <button onclick="fazerLogin()">Entrar</button>
+</div>
+</html>
