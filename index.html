@@ -115,7 +115,7 @@ input {
 </div>
 
 <header>
-  <img src="logo.png">
+  <img src="logo.png" alt="Logo mitiCosturas">
   <h1>mitiCosturas</h1>
 </header>
 
@@ -133,6 +133,13 @@ input {
 
 <h2>Produtos</h2>
 <div id="produtos" class="produtos"></div>
+
+<!-- Contato WhatsApp -->
+<div style="margin-top:40px; text-align:center;">
+  <h2>Fale com a mitiCosturas</h2>
+  <img src="qr.png" width="200" alt="QR Code WhatsApp">
+  <p><a href="https://wa.me/5543XXXXXXXXX" target="_blank">Abrir WhatsApp</a></p>
+</div>
 
 </main>
 
@@ -152,7 +159,6 @@ input {
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
 <script>
-
 let usuarioLogado = null;
 const ADMIN_USER = "mitsuko";
 const ADMIN_PASS = "12345miti";
@@ -279,7 +285,6 @@ function finalizarCompra(){
   atualizarCarrinhoLateral();
   alert("Compra finalizada!");
 }
-
 </script>
 
 </body>
