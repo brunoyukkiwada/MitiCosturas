@@ -3,150 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mitiCosturas</title>
+<title>mitiCosturas - Loja</title>
 <style>
 body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f9f9f9}
 header{background:#ffcccb;padding:20px;text-align:center;border-radius:10px;margin-bottom:20px}
 header h1{margin:0;color:#333}
-input,button{width:100%;padding:10px;margin:5px 0;border-radius:5px;border:1px solid #ccc;font-size:16px}
-button{border:none;background:#ff6b6b;color:#fff;cursor:pointer}
+button{padding:10px;border:none;border-radius:5px;background:#ff6b6b;color:#fff;cursor:pointer}
 button:hover{background:#ff4c4c}
 .produto{background:#fff;padding:10px;margin-bottom:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:0 2px 5px rgba(0,0,0,.1)}
 .produto img{width:60px;height:60px;border-radius:5px;object-fit:cover;margin-right:10px}
-.produto-info{flex:1;display:flex;align-items:center;flex-wrap:wrap}
-#carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s;z-index:1000}
-#carrinhoLateral h2{margin-top:0}
-#abrirCarrinhoBtn{position:fixed;top:20px;right:20px;z-index:1001;padding:10px 15px;border:none;border-radius:50%;background:#ff6b6b;color:#fff;font-size:18px}
-#adminPanel{background:#fff;padding:15px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+#carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s}
+#abrirCarrinhoBtn{position:fixed;top:20px;right:20px;border-radius:50%}
 </style>
 </head>
 <body>
 
 <header>
-<h1>mitiCosturas</h1>
+<h1>mitiCosturas 🧵</h1>
+<a href="admin.html"><button>Painel Admin</button></a>
 </header>
 
-<!-- Painel Admin -->
-<div id="adminPanel">
-<h2>Adicionar Produto</h2>
-<input type="text" id="nomeProduto" placeholder="Nome do produto">
-<input type="number" id="precoProduto" placeholder="Preço">
-<input type="number" id="estoqueProduto" placeholder="Quantidade em estoque">
-<input type="file" id="imagemProduto" accept="image/*">
-<button onclick="adicionarProduto()">Adicionar Produto</button>
-</div>
-
-<!-- Produtos -->
 <h2>Produtos</h2>
 <div id="produtos"></div>
 
-<!-- Carrinho -->
 <div id="carrinhoLateral">
 <h2>🛒 Carrinho</h2>
-<div id="itensCarrinhoLateral"></div>
-<p><strong>Total: R$ <span id="totalCarrinhoLateral">0.00</span></strong></p>
+<div id="itensCarrinho"></div>
+<p><strong>Total: R$ <span id="totalCarrinho">0.00</span></strong></p>
 <button onclick="finalizarCompra()">Finalizar Compra</button>
 <button onclick="fecharCarrinho()" style="background:#aaa;margin-top:10px">Fechar</button>
 </div>
+
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
 <script>
-let usuario = "cliente"; // Troque para "admin" no PC da sua mãe
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
 
-// Mostrar ou esconder painel admin
-function verificarUsuario(){
-  if(usuario !== "admin"){
-    document.getElementById("adminPanel").style.display = "none";
-  }
+function salvarCarrinho(){
+  localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
+  atualizarCarrinho();
 }
 
-// Salvar produtos
-function salvarProdutos(){ 
-  localStorage.setItem("mitiProdutos", JSON.stringify(produtos)); 
-  carregarProdutos(); 
-}
-
-// Salvar carrinho
-function salvarCarrinho(){ 
-  localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho)); 
-  atualizarCarrinhoLateral(); 
-}
-
-// Carregar produtos
 function carregarProdutos(){
   const container = document.getElementById("produtos");
   container.innerHTML="";
-  produtos.forEach((p,i)=>{
-    if(!p.id)p.id=Date.now()+i;
-    let card = document.createElement("div");
+  produtos.forEach(p=>{
+    let card=document.createElement("div");
     card.className="produto";
-    let botaoAdmin = usuario==="admin" ? `<button onclick="editarProduto(${i})">Editar</button> <button onclick="removerProduto(${i})" style="background:red">Remover</button>` : "";
-    card.innerHTML = `<div class="produto-info">
-                        <img src="${p.imagem}">
-                        <span>${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}</span>
-                      </div>
-                      <div>
-                        ${botaoAdmin}
-                        <button onclick="adicionarAoCarrinho(${p.id})" ${p.estoque<=0?'disabled':''}>${p.estoque<=0?'Esgotado':'Adicionar ao Carrinho'}</button>
-                      </div>`;
+    card.innerHTML=`
+      <div>
+        <img src="${p.imagem}">
+        ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
+      </div>
+      <button onclick="adicionarAoCarrinho(${p.id})" ${p.estoque<=0?'disabled':''}>
+        ${p.estoque<=0?'Esgotado':'Adicionar'}
+      </button>`;
     container.appendChild(card);
   });
 }
 
-// Adicionar produto
-function adicionarProduto(){
-  if(usuario!=="admin"){ alert("Acesso restrito!"); return; }
-  const nome=document.getElementById("nomeProduto").value;
-  const preco=parseFloat(document.getElementById("precoProduto").value);
-  const estoque=parseInt(document.getElementById("estoqueProduto").value);
-  const arquivo=document.getElementById("imagemProduto").files[0];
-  if(!nome||!preco||!estoque||!arquivo){ alert("Preencha todos os campos!"); return; }
-  const reader=new FileReader();
-  reader.onload=function(e){
-    produtos.push({id:Date.now(),nome,preco,estoque,imagem:e.target.result});
-    salvarProdutos();
-    limparCampos();
-  }
-  reader.readAsDataURL(arquivo);
-}
-
-// Editar produto
-function editarProduto(i){
-  const p=produtos[i];
-  const novoNome=prompt("Nome:",p.nome);
-  const novoPreco=parseFloat(prompt("Preço:",p.preco));
-  const novoEstoque=parseInt(prompt("Estoque:",p.estoque));
-  if(novoNome&&!isNaN(novoPreco)&&!isNaN(novoEstoque)){ p.nome=novoNome; p.preco=novoPreco; p.estoque=novoEstoque; salvarProdutos(); }
-}
-
-// Remover produto
-function removerProduto(i){ if(confirm("Remover produto?")){ produtos.splice(i,1); salvarProdutos(); } }
-
-// Limpar campos
-function limparCampos(){ document.getElementById("nomeProduto").value=""; document.getElementById("precoProduto").value=""; document.getElementById("estoqueProduto").value=""; document.getElementById("imagemProduto").value=""; }
-
-// Carrinho
 function adicionarAoCarrinho(id){
-  const p=produtos.find(x=>x.id===id); if(!p||p.estoque<=0) return;
-  const item=carrinho.find(x=>x.id===id); if(item)item.quantidade++; else carrinho.push({...p,quantidade:1});
-  p.estoque--; salvarCarrinho(); carregarProdutos();
+  const p=produtos.find(x=>x.id===id);
+  if(!p||p.estoque<=0) return;
+  const item=carrinho.find(x=>x.id===id);
+  if(item)item.quantidade++;
+  else carrinho.push({...p,quantidade:1});
+  p.estoque--;
+  localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
+  salvarCarrinho();
+  carregarProdutos();
 }
-function removerDoCarrinho(id){
-  const item=carrinho.find(x=>x.id===id); const p=produtos.find(x=>x.id===id); if(!item||!p) return;
-  p.estoque+=item.quantidade; carrinho=carrinho.filter(x=>x.id!==id); salvarCarrinho(); carregarProdutos();
-}
-function atualizarCarrinhoLateral(){
-  const c=document.getElementById("itensCarrinhoLateral"); const t=document.getElementById("totalCarrinhoLateral"); c.innerHTML=""; let total=0;
-  carrinho.forEach(item=>{ total+=item.preco*item.quantidade; c.innerHTML+=`<div>${item.nome} x${item.quantidade} - R$ ${(item.preco*item.quantidade).toFixed(2)} <button onclick="removerDoCarrinho(${item.id})">❌</button></div>`; });
+
+function atualizarCarrinho(){
+  const c=document.getElementById("itensCarrinho");
+  const t=document.getElementById("totalCarrinho");
+  c.innerHTML="";
+  let total=0;
+  carrinho.forEach(item=>{
+    total+=item.preco*item.quantidade;
+    c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
+  });
   t.innerText=total.toFixed(2);
 }
-function finalizarCompra(){ if(carrinho.length===0){ alert("Carrinho vazio!"); return; } carrinho=[]; salvarCarrinho(); atualizarCarrinhoLateral(); alert("Compra finalizada!"); }
-function abrirCarrinho(){document.getElementById("carrinhoLateral").style.right="0"; atualizarCarrinhoLateral();}
+
+function finalizarCompra(){
+  carrinho=[];
+  salvarCarrinho();
+  alert("Compra finalizada!");
+}
+
+function abrirCarrinho(){document.getElementById("carrinhoLateral").style.right="0";}
 function fecharCarrinho(){document.getElementById("carrinhoLateral").style.right="-350px";}
 
-window.onload=function(){ verificarUsuario(); carregarProdutos(); atualizarCarrinhoLateral(); }
+window.onload=function(){ carregarProdutos(); atualizarCarrinho(); }
 </script>
+
 </body>
 </html>
