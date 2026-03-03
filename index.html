@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mitiCosturas - Loja</title>
+
 <style>
 body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f9f9f9}
-header{background:#ffcccb;padding:20px;text-align:center;border-radius:10px;margin-bottom:20px}
+header{background:#ffcccb;padding:20px;text-align:center;border-radius:10px;margin-bottom:20px;position:relative}
 header h1{margin:0;color:#333}
 button{padding:10px;border:none;border-radius:5px;background:#ff6b6b;color:#fff;cursor:pointer}
 button:hover{background:#ff4c4c}
@@ -14,13 +15,16 @@ button:hover{background:#ff4c4c}
 .produto img{width:60px;height:60px;border-radius:5px;object-fit:cover;margin-right:10px}
 #carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s}
 #abrirCarrinhoBtn{position:fixed;top:20px;right:20px;border-radius:50%}
+#adminBtn{position:absolute;top:20px;left:20px;display:none}
 </style>
 </head>
+
 <body>
 
 <header>
 <h1>mitiCosturas 🧵</h1>
-<a href="admin.html"><button>Painel Admin</button></a>
+<button id="adminBtn" onclick="irAdmin()">Painel Admin</button>
+<button onclick="loginAdmin()">Área Administrativa</button>
 </header>
 
 <h2>Produtos</h2>
@@ -37,8 +41,33 @@ button:hover{background:#ff4c4c}
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
 <script>
+const SENHA_ADMIN = "1234"; // MUDE AQUI SE QUISER
+
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
+let adminLogado = localStorage.getItem("mitiAdmin") === "true";
+
+function verificarAdmin(){
+  if(adminLogado){
+    document.getElementById("adminBtn").style.display="inline-block";
+  }
+}
+
+function loginAdmin(){
+  const senha = prompt("Digite a senha de administrador:");
+  if(senha === SENHA_ADMIN){
+    localStorage.setItem("mitiAdmin","true");
+    adminLogado = true;
+    verificarAdmin();
+    alert("Login de administrador realizado!");
+  }else{
+    alert("Senha incorreta!");
+  }
+}
+
+function irAdmin(){
+  window.location.href="admin.html";
+}
 
 function salvarCarrinho(){
   localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
@@ -66,9 +95,11 @@ function carregarProdutos(){
 function adicionarAoCarrinho(id){
   const p=produtos.find(x=>x.id===id);
   if(!p||p.estoque<=0) return;
+
   const item=carrinho.find(x=>x.id===id);
   if(item)item.quantidade++;
   else carrinho.push({...p,quantidade:1});
+
   p.estoque--;
   localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
   salvarCarrinho();
@@ -80,10 +111,12 @@ function atualizarCarrinho(){
   const t=document.getElementById("totalCarrinho");
   c.innerHTML="";
   let total=0;
+
   carrinho.forEach(item=>{
     total+=item.preco*item.quantidade;
     c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
   });
+
   t.innerText=total.toFixed(2);
 }
 
@@ -93,10 +126,19 @@ function finalizarCompra(){
   alert("Compra finalizada!");
 }
 
-function abrirCarrinho(){document.getElementById("carrinhoLateral").style.right="0";}
-function fecharCarrinho(){document.getElementById("carrinhoLateral").style.right="-350px";}
+function abrirCarrinho(){
+  document.getElementById("carrinhoLateral").style.right="0";
+}
 
-window.onload=function(){ carregarProdutos(); atualizarCarrinho(); }
+function fecharCarrinho(){
+  document.getElementById("carrinhoLateral").style.right="-350px";
+}
+
+window.onload=function(){
+  verificarAdmin();
+  carregarProdutos();
+  atualizarCarrinho();
+}
 </script>
 
 </body>
