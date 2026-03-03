@@ -121,9 +121,34 @@ function atualizarCarrinho(){
 }
 
 function finalizarCompra(){
-  carrinho=[];
+
+  if(carrinho.length === 0){
+    alert("Carrinho vazio!");
+    return;
+  }
+
+  let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
+  let total = 0;
+
+  carrinho.forEach(item=>{
+    const subtotal = item.preco * item.quantidade;
+    total += subtotal;
+
+    mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A`;
+  });
+
+  mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
+  mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
+
+  // ⚠️ COLOQUE SEU NÚMERO AQUI (DDD + número)
+  const numero = "554391795143";
+
+  const url = `https://wa.me/${numero}?text=${mensagem}`;
+
+  window.open(url, "_blank");
+
+  carrinho = [];
   salvarCarrinho();
-  alert("Compra finalizada!");
 }
 
 function abrirCarrinho(){
