@@ -7,6 +7,11 @@
 <title>mitiCosturas - Loja</title>
 
 <style>
+
+*{
+box-sizing:border-box;
+}
+
 body{
 font-family:Arial,sans-serif;
 margin:0;
@@ -41,7 +46,8 @@ button:hover{
 background:#ff4c4c
 }
 
-/* PRODUTO */
+/* PRODUTOS */
+
 .produto{
 background:#fff;
 padding:10px;
@@ -72,6 +78,7 @@ min-width:100px
 }
 
 /* CARRINHO */
+
 #carrinhoLateral{
 position:fixed;
 top:0;
@@ -82,7 +89,7 @@ background:#fff;
 box-shadow:-2px 0 10px rgba(0,0,0,.3);
 padding:20px;
 overflow-y:auto;
-transition:.3s;
+transition:0.3s;
 z-index:1000
 }
 
@@ -101,7 +108,8 @@ left:20px;
 display:none
 }
 
-/* RESPONSIVO CELULAR */
+/* RESPONSIVO */
+
 @media (max-width:600px){
 
 body{
@@ -111,10 +119,6 @@ padding:10px
 .produto{
 flex-direction:column;
 align-items:flex-start
-}
-
-.produto div{
-flex-direction:row
 }
 
 .produto button{
@@ -133,6 +137,7 @@ right:20px
 }
 
 }
+
 </style>
 
 </head>
@@ -166,8 +171,8 @@ Fechar
 
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
+<!-- QR CODE -->
 
-<!-- QR CODE POPUP -->
 <div id="qrPopup" style="
 position:fixed;
 top:0;
@@ -178,6 +183,7 @@ background:rgba(0,0,0,0.6);
 display:none;
 align-items:center;
 justify-content:center;
+z-index:2000
 ">
 
 <div style="
@@ -198,7 +204,6 @@ max-width:300px;
 
 </div>
 </div>
-
 
 <script>
 
@@ -283,9 +288,7 @@ ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
 
 <button onclick="adicionarAoCarrinho(${p.id})"
 ${p.estoque<=0?'disabled':''}>
-
 ${p.estoque<=0?'Esgotado':'Adicionar'}
-
 </button>
 `;
 
@@ -354,15 +357,11 @@ localStorage.setItem("mitiPedidos", JSON.stringify(pedidos));
 function finalizarCompra(){
 
 if(carrinho.length === 0){
-
 alert("Carrinho vazio!");
-
 return;
-
 }
 
 let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
-
 let total = 0;
 
 carrinho.forEach(item=>{
@@ -376,53 +375,38 @@ mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A
 });
 
 mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
-
 mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
 
 const pedido = {
-
 data: new Date().toLocaleString(),
-
 itens: carrinho,
-
 total: total
-
 };
 
 salvarPedido(pedido);
 
 const numero = "554391795143";
-
 const url = `https://wa.me/${numero}?text=${mensagem}`;
 
 mostrarQRCode(url);
 
 carrinho = [];
-
 salvarCarrinho();
 
 }
 
 function abrirCarrinho(){
-
 document.getElementById("carrinhoLateral").style.right="0";
-
 }
 
 function fecharCarrinho(){
-
 document.getElementById("carrinhoLateral").style.right="-350px";
-
 }
 
 window.onload=function(){
-
 verificarAdmin();
-
 carregarProdutos();
-
 atualizarCarrinho();
-
 }
 
 </script>
