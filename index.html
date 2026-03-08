@@ -1,44 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mitiCosturas - Loja</title>
 
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f9f9f9}
-header{background:#ffcccb;padding:20px;text-align:center;border-radius:10px;margin-bottom:20px;position:relative}
-header h1{margin:0;color:#333}
-button{padding:10px;border:none;border-radius:5px;background:#ff6b6b;color:#fff;cursor:pointer}
-button:hover{background:#ff4c4c}
-.produto{background:#fff;padding:10px;margin-bottom:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-.produto img{width:60px;height:60px;border-radius:5px;object-fit:cover;margin-right:10px}
-#carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s}
-#abrirCarrinhoBtn{position:fixed;top:20px;right:20px;border-radius:50%}
-#adminBtn{position:absolute;top:20px;left:20px;display:none}
-</style>
-</head>
+body{
+font-family:Arial,sans-serif;
+margin:0;
+padding:20px;
+background:#f9f9f9
+}
 
-<body>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mitiCosturas - Loja</title>
+header{
+background:#ffcccb;
+padding:20px;
+text-align:center;
+border-radius:10px;
+margin-bottom:20px;
+position:relative
+}
 
-<style>
-body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f9f9f9}
-header{background:#ffcccb;padding:20px;text-align:center;border-radius:10px;margin-bottom:20px;position:relative}
-header h1{margin:0;color:#333}
-button{padding:10px;border:none;border-radius:5px;background:#ff6b6b;color:#fff;cursor:pointer}
-button:hover{background:#ff4c4c}
-.produto{background:#fff;padding:10px;margin-bottom:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-.produto img{width:60px;height:60px;border-radius:5px;object-fit:cover;margin-right:10px}
-#carrinhoLateral{position:fixed;top:0;right:-350px;width:300px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.3);padding:20px;overflow-y:auto;transition:.3s}
-#abrirCarrinhoBtn{position:fixed;top:20px;right:20px;border-radius:50%}
-#adminBtn{position:absolute;top:20px;left:20px;display:none}
+header h1{
+margin:0;
+color:#333
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:5px;
+background:#ff6b6b;
+color:#fff;
+cursor:pointer
+}
+
+button:hover{
+background:#ff4c4c
+}
+
+.produto{
+background:#fff;
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+box-shadow:0 2px 5px rgba(0,0,0,.1)
+}
+
+.produto img{
+width:60px;
+height:60px;
+border-radius:5px;
+object-fit:cover;
+margin-right:10px
+}
+
+#carrinhoLateral{
+position:fixed;
+top:0;
+right:-350px;
+width:300px;
+height:100%;
+background:#fff;
+box-shadow:-2px 0 10px rgba(0,0,0,.3);
+padding:20px;
+overflow-y:auto;
+transition:.3s
+}
+
+#abrirCarrinhoBtn{
+position:fixed;
+top:20px;
+right:20px;
+border-radius:50%
+}
+
+#adminBtn{
+position:absolute;
+top:20px;
+left:20px;
+display:none
+}
 </style>
+
 </head>
 
 <body>
@@ -53,16 +103,59 @@ button:hover{background:#ff4c4c}
 <div id="produtos"></div>
 
 <div id="carrinhoLateral">
+
 <h2>🛒 Carrinho</h2>
+
 <div id="itensCarrinho"></div>
+
 <p><strong>Total: R$ <span id="totalCarrinho">0.00</span></strong></p>
+
 <button onclick="finalizarCompra()">Finalizar Compra</button>
-<button onclick="fecharCarrinho()" style="background:#aaa;margin-top:10px">Fechar</button>
+
+<button onclick="fecharCarrinho()" style="background:#aaa;margin-top:10px">
+Fechar
+</button>
+
 </div>
 
 <button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
 
+
+<!-- QR CODE POPUP -->
+<div id="qrPopup" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+display:none;
+align-items:center;
+justify-content:center;
+">
+
+<div style="
+background:white;
+padding:20px;
+border-radius:10px;
+text-align:center;
+max-width:300px;
+">
+
+<h3>Escaneie para falar no WhatsApp</h3>
+
+<img id="qrCodeImg" src="" style="width:200px;height:200px">
+
+<br><br>
+
+<button onclick="fecharQR()">Fechar</button>
+
+</div>
+</div>
+
+
 <script>
+
 const SENHA_ADMIN = "miti1963";
 
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
@@ -70,395 +163,223 @@ let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
 let adminLogado = sessionStorage.getItem("mitiAdmin") === "true";
 
 function verificarAdmin(){
-  if(adminLogado){
-    document.getElementById("adminBtn").style.display="inline-block";
-  }
+if(adminLogado){
+document.getElementById("adminBtn").style.display="inline-block";
+}
 }
 
 function mostrarQRCode(url){
-  const qr = document.getElementById("qrCodeImg");
-  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(url);
-  document.getElementById("qrPopup").style.display="flex";
+
+const qr = document.getElementById("qrCodeImg");
+
+qr.src =
+"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
++ encodeURIComponent(url);
+
+document.getElementById("qrPopup").style.display="flex";
+
 }
 
 function fecharQR(){
-  document.getElementById("qrPopup").style.display="none";
+document.getElementById("qrPopup").style.display="none";
 }
 
 function loginAdmin(){
-  const usuario = prompt("Usuário:");
-  const senha = prompt("Senha:");
 
-  if(usuario === "admin" && senha === SENHA_ADMIN){
-    sessionStorage.setItem("mitiAdmin","true");
-    alert("Login realizado!");
-    location.reload();
-  }else{
-    alert("Login incorreto");
-  }
+const usuario = prompt("Usuário:");
+const senha = prompt("Senha:");
+
+if(usuario === "admin" && senha === SENHA_ADMIN){
+
+sessionStorage.setItem("mitiAdmin","true");
+
+alert("Login realizado!");
+
+location.reload();
+
+}else{
+
+alert("Login incorreto");
+
+}
+
 }
 
 function irAdmin(){
-  window.location.href="admin.html";
+window.location.href="admin.html";
 }
 
 function salvarCarrinho(){
-  localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
-  atualizarCarrinho();
+
+localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
+
+atualizarCarrinho();
+
 }
 
 function carregarProdutos(){
-  const container = document.getElementById("produtos");
-  container.innerHTML="";
 
-  produtos.forEach(p=>{
-    let card=document.createElement("div");
-    card.className="produto";
+const container = document.getElementById("produtos");
 
-    card.innerHTML=`
-      <div>
-        <img src="${p.imagem}">
-        ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
-      </div>
+container.innerHTML="";
 
-      <button onclick="adicionarAoCarrinho(${p.id})" ${p.estoque<=0?'disabled':''}>
-        ${p.estoque<=0?'Esgotado':'Adicionar'}
-      </button>
-    `;
+produtos.forEach(p=>{
 
-    container.appendChild(card);
-  });
+let card=document.createElement("div");
+
+card.className="produto";
+
+card.innerHTML=`
+<div>
+<img src="${p.imagem}">
+${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
+</div>
+
+<button onclick="adicionarAoCarrinho(${p.id})"
+${p.estoque<=0?'disabled':''}>
+
+${p.estoque<=0?'Esgotado':'Adicionar'}
+
+</button>
+`;
+
+container.appendChild(card);
+
+});
+
 }
 
 function adicionarAoCarrinho(id){
 
-  const p=produtos.find(x=>x.id===id);
-  if(!p || p.estoque<=0) return;
+const p=produtos.find(x=>x.id===id);
 
-  const item=carrinho.find(x=>x.id===id);
+if(!p || p.estoque<=0) return;
 
-  if(item){
-    item.quantidade++;
-  }else{
-    carrinho.push({...p,quantidade:1});
-  }
+const item=carrinho.find(x=>x.id===id);
 
-  p.estoque--;
+if(item){
+item.quantidade++;
+}else{
+carrinho.push({...p,quantidade:1});
+}
 
-  localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
+p.estoque--;
 
-  salvarCarrinho();
-  carregarProdutos();
+localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
+
+salvarCarrinho();
+
+carregarProdutos();
+
 }
 
 function atualizarCarrinho(){
 
-  const c=document.getElementById("itensCarrinho");
-  const t=document.getElementById("totalCarrinho");
+const c=document.getElementById("itensCarrinho");
 
-  c.innerHTML="";
-  let total=0;
+const t=document.getElementById("totalCarrinho");
 
-  carrinho.forEach(item=>{
-    total+=item.preco*item.quantidade;
-    c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
-  });
+c.innerHTML="";
 
-  t.innerText=total.toFixed(2);
+let total=0;
+
+carrinho.forEach(item=>{
+
+total+=item.preco*item.quantidade;
+
+c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
+
+});
+
+t.innerText=total.toFixed(2);
+
 }
 
 function salvarPedido(pedido){
-  let pedidos = JSON.parse(localStorage.getItem("mitiPedidos")) || [];
-  pedidos.push(pedido);
-  localStorage.setItem("mitiPedidos", JSON.stringify(pedidos));
+
+let pedidos = JSON.parse(localStorage.getItem("mitiPedidos")) || [];
+
+pedidos.push(pedido);
+
+localStorage.setItem("mitiPedidos", JSON.stringify(pedidos));
+
 }
 
 function finalizarCompra(){
 
-  if(carrinho.length === 0){
-    alert("Carrinho vazio!");
-    return;
-  }
+if(carrinho.length === 0){
 
-  let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
-  let total = 0;
+alert("Carrinho vazio!");
 
-  carrinho.forEach(item=>{
-    const subtotal = item.preco * item.quantidade;
-    total += subtotal;
-
-    mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A`;
-  });
-
-  mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
-  mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
-
-  const pedido = {
-    data: new Date().toLocaleString(),
-    itens: carrinho,
-    total: total
-  };
-
-  salvarPedido(pedido);
-
-  const numero = "554391795143";
-  const url = `https://wa.me/${numero}?text=${mensagem}`;
-
-  mostrarQRCode(url);
-
-  carrinho = [];
-  salvarCarrinho();
-}
-
-function abrirCarrinho(){
-  document.getElementById("carrinhoLateral").style.right="0";
-}
-
-function fecharCarrinho(){
-  document.getElementById("carrinhoLateral").style.right="-350px";
-}
-
-window.onload=function(){
-  verificarAdmin();
-  carregarProdutos();
-  atualizarCarrinho();
-}
-</script>
-<div id="qrPopup" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-">
-
-<div style="
-background:white;
-padding:20px;
-border-radius:10px;
-text-align:center;
-max-width:300px;
-">
-
-<h3>Escaneie para falar no WhatsApp</h3>
-
-<img id="qrCodeImg" src="" style="width:200px;height:200px">
-
-<br><br>
-
-<button onclick="fecharQR()">Fechar</button>
-  
-</div>
-</body>
-</html>
-<header>
-<h1>mitiCosturas 🧵</h1>
-<button id="adminBtn" onclick="irAdmin()">Painel Admin</button>
-<button onclick="loginAdmin()">Área Administrativa</button>
-</header>
-
-<h2>Produtos</h2>
-<div id="produtos"></div>
-
-<div id="carrinhoLateral">
-<h2>🛒 Carrinho</h2>
-<div id="itensCarrinho"></div>
-<p><strong>Total: R$ <span id="totalCarrinho">0.00</span></strong></p>
-<button onclick="finalizarCompra()">Finalizar Compra</button>
-<button onclick="fecharCarrinho()" style="background:#aaa;margin-top:10px">Fechar</button>
-</div>
-
-<button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
-
-<script>
-const SENHA_ADMIN = "miti1963"; // MUDE AQUI SE QUISER
-
-let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
-let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
-let adminLogado = sessionStorage.getItem("mitiAdmin") === "true";
-function verificarAdmin(){
-  if(adminLogado){
-    document.getElementById("adminBtn").style.display="inline-block";
-  }
-}
-function mostrarQRCode(url){
-  const qr = document.getElementById("qrCodeImg");
-
-  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(url);
-
-  document.getElementById("qrPopup").style.display="flex";
-}
-
-function fecharQR(){
-  document.getElementById("qrPopup").style.display="none";
-}
-
-function loginAdmin(){
-
-  const usuario = prompt("Usuário:");
-  const senha = prompt("Senha:");
-
-  if(usuario === "admin" && senha === "miti1963"){
-
-    sessionStorage.setItem("mitiAdmin","true");
-
-    alert("Login realizado!");
-    location.reload();
-
-  }else{
-    alert("Login incorreto");
-  }
+return;
 
 }
 
-function irAdmin(){
-  window.location.href="admin.html";
-}
+let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
 
-function salvarCarrinho(){
-  localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
-  atualizarCarrinho();
-}
+let total = 0;
 
-function carregarProdutos(){
-  const container = document.getElementById("produtos");
-  container.innerHTML="";
-  produtos.forEach(p=>{
-    let card=document.createElement("div");
-    card.className="produto";
-    card.innerHTML=`
-      <div>
-        <img src="${p.imagem}">
-        ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
-      </div>
-      <button onclick="adicionarAoCarrinho(${p.id})" ${p.estoque<=0?'disabled':''}>
-        ${p.estoque<=0?'Esgotado':'Adicionar'}
-      </button>`;
-    container.appendChild(card);
-  });
-}
+carrinho.forEach(item=>{
 
-function adicionarAoCarrinho(id){
-  const p=produtos.find(x=>x.id===id);
-  if(!p||p.estoque<=0) return;
+const subtotal = item.preco * item.quantidade;
 
-  const item=carrinho.find(x=>x.id===id);
-  if(item)item.quantidade++;
-  else carrinho.push({...p,quantidade:1});
+total += subtotal;
 
-  p.estoque--;
-  localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
-  salvarCarrinho();
-  carregarProdutos();
-}
+mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A`;
 
-function atualizarCarrinho(){
-  const c=document.getElementById("itensCarrinho");
-  const t=document.getElementById("totalCarrinho");
-  c.innerHTML="";
-  let total=0;
+});
 
-  carrinho.forEach(item=>{
-    total+=item.preco*item.quantidade;
-    c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
-  });
+mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
 
-  t.innerText=total.toFixed(2);
-}
+mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
 
-function finalizarCompra(){
+const pedido = {
 
-  if(carrinho.length === 0){
-    alert("Carrinho vazio!");
-    return;
-  const pedido = {
 data: new Date().toLocaleString(),
+
 itens: carrinho,
+
 total: total
+
 };
 
 salvarPedido(pedido);
-  }
-  
-  function salvarPedido(pedido){
 
-  let pedidos = JSON.parse(localStorage.getItem("mitiPedidos")) || [];
+const numero = "554391795143";
 
-  pedidos.push(pedido);
+const url = `https://wa.me/${numero}?text=${mensagem}`;
 
-  localStorage.setItem("mitiPedidos", JSON.stringify(pedidos));
+mostrarQRCode(url);
 
-}
+carrinho = [];
 
-  let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
-  let total = 0;
+salvarCarrinho();
 
-  carrinho.forEach(item=>{
-    const subtotal = item.preco * item.quantidade;
-    total += subtotal;
-
-    mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A`;
-  });
-
-  mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
-  mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
-
-  // ⚠️ COLOQUE SEU NÚMERO AQUI (DDD + número)
-  const numero = "554391795143";
-
-  const url = `https://wa.me/${numero}?text=${mensagem}`;
-
-  mostrarQRCode(url);
-  carrinho = [];
-  salvarCarrinho();
 }
 
 function abrirCarrinho(){
-  document.getElementById("carrinhoLateral").style.right="0";
+
+document.getElementById("carrinhoLateral").style.right="0";
+
 }
 
 function fecharCarrinho(){
-  document.getElementById("carrinhoLateral").style.right="-350px";
+
+document.getElementById("carrinhoLateral").style.right="-350px";
+
 }
 
 window.onload=function(){
-  verificarAdmin();
-  carregarProdutos();
-  atualizarCarrinho();
+
+verificarAdmin();
+
+carregarProdutos();
+
+atualizarCarrinho();
+
 }
+
 </script>
-<div id="qrPopup" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-">
 
-<div style="
-background:white;
-padding:20px;
-border-radius:10px;
-text-align:center;
-max-width:300px;
-">
-
-<h3>Escaneie para falar no WhatsApp</h3>
-
-<img id="qrCodeImg" src="" style="width:200px;height:200px">
-
-<br><br>
-
-<button onclick="fecharQR()">Fechar</button>
-  
-</div>
 </body>
 </html>
