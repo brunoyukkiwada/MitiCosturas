@@ -41,6 +41,7 @@ button:hover{
 background:#ff4c4c
 }
 
+/* PRODUTO */
 .produto{
 background:#fff;
 padding:10px;
@@ -49,18 +50,28 @@ border-radius:10px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-flex-wrap:wrap;
+gap:10px;
 box-shadow:0 2px 5px rgba(0,0,0,.1)
+}
+
+.produto div{
+display:flex;
+align-items:center;
+gap:10px
 }
 
 .produto img{
 width:60px;
 height:60px;
 border-radius:5px;
-object-fit:cover;
-margin-right:10px
+object-fit:cover
 }
 
+.produto button{
+min-width:100px
+}
+
+/* CARRINHO */
 #carrinhoLateral{
 position:fixed;
 top:0;
@@ -71,14 +82,16 @@ background:#fff;
 box-shadow:-2px 0 10px rgba(0,0,0,.3);
 padding:20px;
 overflow-y:auto;
-transition:.3s
+transition:.3s;
+z-index:1000
 }
 
 #abrirCarrinhoBtn{
 position:fixed;
 top:20px;
 right:20px;
-border-radius:50%
+border-radius:50%;
+z-index:1001
 }
 
 #adminBtn{
@@ -86,6 +99,39 @@ position:absolute;
 top:20px;
 left:20px;
 display:none
+}
+
+/* RESPONSIVO CELULAR */
+@media (max-width:600px){
+
+body{
+padding:10px
+}
+
+.produto{
+flex-direction:column;
+align-items:flex-start
+}
+
+.produto div{
+flex-direction:row
+}
+
+.produto button{
+width:100%
+}
+
+#carrinhoLateral{
+width:85%;
+right:-100%
+}
+
+#abrirCarrinhoBtn{
+bottom:20px;
+top:auto;
+right:20px
+}
+
 }
 </style>
 
