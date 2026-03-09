@@ -93,6 +93,10 @@ button:hover{background:#ff4c4c}
 </div>
 
 <script>
+if(sessionStorage.getItem("mitiAdmin") !== "true"){
+  alert("Acesso negado");
+  window.location.href="index.html";
+}
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 
 function salvar(){
