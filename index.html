@@ -11,7 +11,7 @@
 *{box-sizing:border-box;}
 
 body{
-font-family:Arial,sans-serif;
+font-family:Arial;
 margin:0;
 padding:20px;
 background:#f9f9f9
@@ -24,11 +24,6 @@ text-align:center;
 border-radius:10px;
 margin-bottom:20px;
 position:relative
-}
-
-header h1{
-margin:0;
-color:#333
 }
 
 button{
@@ -52,12 +47,6 @@ justify-content:space-between;
 align-items:center;
 gap:10px;
 box-shadow:0 2px 5px rgba(0,0,0,.1)
-}
-
-.produto div{
-display:flex;
-align-items:center;
-gap:10px
 }
 
 .produto img{
@@ -103,12 +92,10 @@ display:none
 <body>
 
 <header>
-
 <h1>mitiCosturas 🧵</h1>
 
 <button id="adminBtn" onclick="irAdmin()">Painel Admin</button>
 <button onclick="loginAdmin()">Área Administrativa</button>
-
 </header>
 
 <h2>Produtos</h2>
@@ -132,90 +119,53 @@ Fechar
 
 </div>
 
-<button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">🛒</button>
-
-<!-- QR -->
-
-<div id="qrPopup" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center">
-
-<div style="background:white;padding:20px;border-radius:10px;text-align:center">
-
-<h3>Escaneie para falar no WhatsApp</h3>
-
-<img id="qrCodeImg" style="width:200px;height:200px">
-
-<br><br>
-
-<button onclick="fecharQR()">Fechar</button>
-
-</div>
-
-</div>
+<button id="abrirCarrinhoBtn" onclick="abrirCarrinho()">
+🛒 <span id="contadorCarrinho">0</span>
+</button>
 
 <!-- Firebase -->
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 
-/* =========================
-FIREBASE
-========================= */
+/* FIREBASE */
 
 const firebaseConfig = {
-
-apiKey: "SUA_KEY",
-authDomain: "SEU_DOMINIO",
-projectId: "SEU_ID"
-
+apiKey:"SUA_KEY",
+authDomain:"SEU_DOMINIO",
+projectId:"SEU_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
-/* =========================
-CONFIG
-========================= */
+/* CONFIG */
 
-const SENHA_ADMIN = "miti1963";
+const SENHA_ADMIN="miti1963";
 
-/* =========================
-DADOS
-========================= */
+/* DADOS */
 
-let produtos = [];
-let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
-let adminLogado = sessionStorage.getItem("mitiAdmin") === "true";
+let produtos=[];
+let carrinho=JSON.parse(localStorage.getItem("mitiCarrinho"))||[];
+let adminLogado=sessionStorage.getItem("mitiAdmin")==="true";
 
-/* =========================
-ADMIN
-========================= */
+/* ADMIN */
 
 function verificarAdmin(){
-
-if(adminLogado){
+if(adminLogado)
 document.getElementById("adminBtn").style.display="inline-block";
-}
-
 }
 
 function loginAdmin(){
 
-const usuario = prompt("Usuário:");
-const senha = prompt("Senha:");
+const usuario=prompt("Usuário:");
+const senha=prompt("Senha:");
 
 if(usuario==="admin" && senha===SENHA_ADMIN){
-
 sessionStorage.setItem("mitiAdmin","true");
 location.reload();
-
-}else{
-
-alert("Login incorreto");
-
-}
+}else alert("Login incorreto");
 
 }
 
@@ -223,66 +173,53 @@ function irAdmin(){
 window.location.href="admin.html";
 }
 
-/* =========================
-PRODUTOS ONLINE
-========================= */
+/* FIRESTORE REALTIME */
 
-async function carregarProdutosOnline(){
+function carregarProdutosOnline(){
 
-const doc = await db.collection("loja").doc("produtos").get();
+db.collection("loja")
+.doc("produtos")
+.onSnapshot(doc=>{
 
 if(doc.exists){
-
-produtos = doc.data().lista || [];
-
-}
-
+produtos=doc.data().lista||[];
 renderizarProdutos();
-
 }
-
-async function salvarProdutos(){
-
-await db.collection("loja").doc("produtos").set({
-
-lista: produtos
 
 });
 
 }
 
-/* =========================
-RENDER
-========================= */
+/* SALVAR */
+
+async function salvarProdutos(){
+await db.collection("loja").doc("produtos").set({
+lista:produtos
+});
+}
+
+/* RENDER PRODUTOS */
 
 function renderizarProdutos(){
 
-const container = document.getElementById("produtos");
-
+const container=document.getElementById("produtos");
 container.innerHTML="";
 
 produtos.forEach(p=>{
 
-let card=document.createElement("div");
+const card=document.createElement("div");
 card.className="produto";
 
 card.innerHTML=`
-
 <div>
-
-<img src="${p.imagem}" onclick="abrirGaleria('${p.imagem}')">
-
+<img src="${p.imagem}">
 ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
-
 </div>
 
 <button onclick="adicionarAoCarrinho(${p.id})"
 ${p.estoque<=0?"disabled":""}>
-
 ${p.estoque<=0?"Esgotado":"Adicionar"}
-
 </button>
-
 `;
 
 container.appendChild(card);
@@ -291,35 +228,22 @@ container.appendChild(card);
 
 }
 
-/* =========================
-CARRINHO
-========================= */
+/* CARRINHO */
 
 function salvarCarrinho(){
-
 localStorage.setItem("mitiCarrinho",JSON.stringify(carrinho));
-
 atualizarCarrinho();
-
 }
 
 function adicionarAoCarrinho(id){
 
-const produto = produtos.find(p=>p.id===id);
+const produto=produtos.find(p=>p.id===id);
+if(!produto||produto.estoque<=0)return;
 
-if(!produto || produto.estoque<=0) return;
+const item=carrinho.find(i=>i.id===id);
 
-const item = carrinho.find(i=>i.id===id);
-
-if(item){
-
-item.quantidade++;
-
-}else{
-
-carrinho.push({...produto,quantidade:1});
-
-}
+if(item) item.quantidade++;
+else carrinho.push({...produto,quantidade:1});
 
 produto.estoque--;
 
@@ -331,17 +255,11 @@ renderizarProdutos();
 
 function removerDoCarrinho(id){
 
-const index = carrinho.findIndex(i=>i.id===id);
+const index=carrinho.findIndex(i=>i.id===id);
+if(index===-1)return;
 
-if(index===-1) return;
-
-const produto = produtos.find(p=>p.id===id);
-
-if(produto){
-
-produto.estoque += carrinho[index].quantidade;
-
-}
+const produto=produtos.find(p=>p.id===id);
+produto.estoque+=carrinho[index].quantidade;
 
 carrinho.splice(index,1);
 
@@ -359,101 +277,61 @@ const totalSpan=document.getElementById("totalCarrinho");
 container.innerHTML="";
 
 let total=0;
+let quantidade=0;
 
 carrinho.forEach(item=>{
 
+quantidade+=item.quantidade;
 total+=item.preco*item.quantidade;
 
 container.innerHTML+=`
-
 <div style="margin-bottom:10px;border-bottom:1px solid #ddd;padding-bottom:5px">
-
-${item.nome} x${item.quantidade}
-
-<br>
-
+${item.nome} x${item.quantidade}<br>
 <button onclick="removerDoCarrinho(${item.id})"
 style="background:#999;margin-top:5px">
-
 Remover
-
 </button>
-
 </div>
-
 `;
 
 });
 
+document.getElementById("contadorCarrinho").innerText=quantidade;
 totalSpan.innerText=total.toFixed(2);
 
 }
 
-/* =========================
-COMPRA
-========================= */
+/* COMPRA */
 
 function finalizarCompra(){
 
 if(carrinho.length===0){
-
 alert("Carrinho vazio");
-
 return;
-
 }
 
-let mensagem="🧵 *Pedido - mitiCosturas*\n\n";
+let mensagem="🧵 *Pedido - mitiCosturas*\\n\\n";
 let total=0;
 
 carrinho.forEach(item=>{
-
 const subtotal=item.preco*item.quantidade;
-
 total+=subtotal;
-
-mensagem+=`• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}\n`;
-
+mensagem+=`• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}\\n`;
 });
 
-mensagem+=`\n💰 Total: R$ ${total.toFixed(2)}`;
+mensagem+=`\\n💰 Total: R$ ${total.toFixed(2)}`;
 
-const numero="554391795143";
-
-const url=`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-
-window.open(url,"_blank");
-
-mostrarQRCode(url);
+window.open(
+`https://wa.me/554391795143?text=${encodeURIComponent(mensagem)}`,
+"_blank"
+);
 
 carrinho=[];
-
 salvarCarrinho();
 
 }
 
-/* =========================
-QR
-========================= */
-
-function mostrarQRCode(url){
-
-document.getElementById("qrCodeImg").src =
-"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(url);
-
-document.getElementById("qrPopup").style.display="flex";
-
-}
-
-function fecharQR(){
-
-document.getElementById("qrPopup").style.display="none";
-
-}
-
-/* =========================
-UI
-========================= */
+/* UI */
 
 function abrirCarrinho(){
 document.getElementById("carrinhoLateral").style.right="0";
@@ -463,17 +341,13 @@ function fecharCarrinho(){
 document.getElementById("carrinhoLateral").style.right="-350px";
 }
 
-/* =========================
-INIT
-========================= */
+/* INIT */
 
-window.onload=function(){
-
+window.onload=()=>{
 verificarAdmin();
 carregarProdutosOnline();
 atualizarCarrinho();
-
-}
+};
 
 </script>
 
