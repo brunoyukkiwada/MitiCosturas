@@ -1,202 +1,254 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mitiCosturas - Admin</title>
+<title>Painel Admin - mitiCosturas</title>
 
 <style>
+
 body{
-  font-family:Arial;
-  background:#f4f4f4;
-  padding:20px;
-  max-width:650px;
-  margin:auto;
+font-family:Arial;
+background:#f4f4f4;
+padding:20px
 }
 
-h1{text-align:center}
-
-.card{
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.1);
-  margin-bottom:20px;
+h1{
+text-align:center
 }
 
-input,button{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:8px;
-  font-size:16px;
+.box{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 2px 5px rgba(0,0,0,.1)
 }
 
-input{border:1px solid #ccc}
+input{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border-radius:5px;
+border:1px solid #ccc
+}
 
 button{
-  border:none;
-  background:#ff6b6b;
-  color:white;
-  cursor:pointer;
-  font-weight:bold;
+padding:10px;
+border:none;
+background:#ff6b6b;
+color:white;
+border-radius:5px;
+cursor:pointer
 }
 
-button:hover{background:#ff4c4c}
+button:hover{
+background:#ff4c4c
+}
 
 .produto{
-  background:#fff;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+border-bottom:1px solid #ddd;
+padding-bottom:10px
 }
 
-.produto img{
-  width:50px;
-  height:50px;
-  object-fit:cover;
-  border-radius:5px;
+img{
+width:60px;
+height:60px;
+object-fit:cover;
+border-radius:5px
 }
 
-.acoes{
-  display:flex;
-  gap:5px;
-}
-
-.remover{background:red;padding:5px 10px;font-size:14px}
-.editar{background:#ffa500;padding:5px 10px;font-size:14px}
 </style>
 </head>
 
 <body>
 
-<h1>Painel Administrativo 🛠</h1>
+<h1>Painel Admin 🧵</h1>
 
-<div class="card">
-<h3>Adicionar Produto</h3>
+<div class="box">
 
-<input type="text" id="nomeProduto" placeholder="Nome do Produto">
-<input type="number" id="precoProduto" placeholder="Preço (Ex: 49.90)" step="0.01">
-<input type="number" id="estoqueProduto" placeholder="Quantidade em estoque (padrão 10)">
-<input type="file" id="imagemProduto" accept="image/*">
+<h2>Adicionar Produto</h2>
 
-<button onclick="adicionarProduto()">Salvar Produto</button>
+<input id="nome" placeholder="Nome do produto">
+
+<input id="preco" type="number" placeholder="Preço">
+
+<input id="estoque" type="number" placeholder="Estoque">
+
+<input id="imagem" placeholder="URL da imagem">
+
+<button onclick="adicionarProduto()">Adicionar Produto</button>
+
 </div>
 
-<div class="card">
-<h3>Produtos Cadastrados</h3>
+<div class="box">
+
+<h2>Produtos da Loja</h2>
+
 <div id="listaProdutos"></div>
+
 </div>
+
+<!-- Firebase -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-if(sessionStorage.getItem("mitiAdmin") !== "true"){
-  alert("Acesso negado");
-  window.location.href="index.html";
-}
-let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 
-function salvar(){
-  localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
-  carregar();
-}
+/* FIREBASE */
 
-function carregar(){
-  const lista = document.getElementById("listaProdutos");
-  lista.innerHTML = "";
+const firebaseConfig = {
 
-  produtos.forEach((p,i)=>{
-    lista.innerHTML += `
-      <div class="produto">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <img src="${p.imagem}">
-          <div>
-            <strong>${p.nome}</strong><br>
-            R$ ${p.preco.toFixed(2)}<br>
-            Estoque: ${p.estoque}
-          </div>
-        </div>
-        <div class="acoes">
-          <button class="editar" onclick="editar(${i})">Editar</button>
-          <button class="remover" onclick="remover(${i})">X</button>
-        </div>
-      </div>
-    `;
-  });
-}
+apiKey:"SUA_KEY",
+authDomain:"SEU_DOMINIO",
+projectId:"SEU_ID"
 
-function adicionarProduto(){
-  const nome = document.getElementById("nomeProduto").value.trim();
-  const preco = parseFloat(document.getElementById("precoProduto").value);
-  let estoque = parseInt(document.getElementById("estoqueProduto").value);
-  const arquivo = document.getElementById("imagemProduto").files[0];
+};
 
-  if(!nome || isNaN(preco) || !arquivo){
-    alert("Preencha nome, preço e imagem!");
-    return;
-  }
+firebase.initializeApp(firebaseConfig);
 
-  if(isNaN(estoque) || estoque <= 0){
-    estoque = 10; // padrão automático
-  }
+const db = firebase.firestore();
 
-  const reader = new FileReader();
+/* DADOS */
 
-  reader.onload = function(e){
-    produtos.push({
-      id: Date.now(),
-      nome,
-      preco,
-      estoque,
-      imagem: e.target.result
-    });
+let produtos = [];
 
-    salvar();
-    limparCampos();
-    alert("Produto adicionado na loja!");
-  };
+/* ADICIONAR PRODUTO */
 
-  reader.readAsDataURL(arquivo);
+async function adicionarProduto(){
+
+const nome = document.getElementById("nome").value;
+const preco = Number(document.getElementById("preco").value);
+const estoque = Number(document.getElementById("estoque").value);
+const imagem = document.getElementById("imagem").value;
+
+if(!nome || !preco || !estoque){
+
+alert("Preencha os campos");
+
+return;
+
 }
 
-function editar(i){
-  const p = produtos[i];
+const produto = {
 
-  const novoNome = prompt("Nome:", p.nome);
-  const novoPreco = parseFloat(prompt("Preço:", p.preco));
-  const novoEstoque = parseInt(prompt("Estoque:", p.estoque));
+id: Date.now(),
+nome,
+preco,
+estoque,
+imagem
 
-  if(!novoNome || isNaN(novoPreco) || isNaN(novoEstoque)){
-    alert("Dados inválidos!");
-    return;
-  }
+};
 
-  p.nome = novoNome;
-  p.preco = novoPreco;
-  p.estoque = novoEstoque;
+produtos.push(produto);
 
-  salvar();
-  alert("Produto atualizado!");
+await salvarProdutos();
+
+limparCampos();
+
 }
 
-function remover(i){
-  if(confirm("Remover produto?")){
-    produtos.splice(i,1);
-    salvar();
-  }
+/* SALVAR */
+
+async function salvarProdutos(){
+
+await db.collection("loja")
+.doc("produtos")
+.set({
+
+lista: produtos
+
+});
+
 }
+
+/* REMOVER */
+
+async function removerProduto(id){
+
+produtos = produtos.filter(p => p.id !== id);
+
+await salvarProdutos();
+
+}
+
+/* RENDER */
+
+function renderizarProdutos(){
+
+const container = document.getElementById("listaProdutos");
+
+container.innerHTML="";
+
+produtos.forEach(p=>{
+
+container.innerHTML += `
+
+<div class="produto">
+
+<div style="display:flex;gap:10px;align-items:center">
+
+<img src="${p.imagem}">
+
+<div>
+
+${p.nome}<br>
+
+R$ ${p.preco}<br>
+
+Estoque: ${p.estoque}
+
+</div>
+
+</div>
+
+<button onclick="removerProduto(${p.id})">
+
+Remover
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+/* TEMPO REAL */
+
+db.collection("loja")
+.doc("produtos")
+.onSnapshot((doc)=>{
+
+if(doc.exists){
+
+produtos = doc.data().lista || [];
+
+renderizarProdutos();
+
+}
+
+});
+
+/* LIMPAR */
 
 function limparCampos(){
-  document.getElementById("nomeProduto").value="";
-  document.getElementById("precoProduto").value="";
-  document.getElementById("estoqueProduto").value="";
-  document.getElementById("imagemProduto").value="";
+
+document.getElementById("nome").value="";
+document.getElementById("preco").value="";
+document.getElementById("estoque").value="";
+document.getElementById("imagem").value="";
+
 }
 
-window.onload = carregar;
 </script>
 
 </body>
