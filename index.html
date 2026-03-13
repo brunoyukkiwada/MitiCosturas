@@ -134,8 +134,10 @@ right:20px
 
 <header>
 <h1>mitiCosturas 🧵</h1>
+
 <button id="adminBtn" onclick="irAdmin()">Painel Admin</button>
 <button onclick="loginAdmin()">Área Administrativa</button>
+
 </header>
 
 <h2>Produtos</h2>
@@ -220,11 +222,23 @@ z-index:3000">
 
 <script>
 
+/* =========================
+CONFIG
+========================= */
+
 const SENHA_ADMIN = "miti1963";
+
+/* =========================
+DADOS
+========================= */
 
 let produtos = JSON.parse(localStorage.getItem("mitiProdutos")) || [];
 let carrinho = JSON.parse(localStorage.getItem("mitiCarrinho")) || [];
 let adminLogado = sessionStorage.getItem("mitiAdmin") === "true";
+
+/* =========================
+ADMIN
+========================= */
 
 function verificarAdmin(){
 if(adminLogado){
@@ -237,10 +251,12 @@ function loginAdmin(){
 const usuario = prompt("Usuário:");
 const senha = prompt("Senha:");
 
-if(usuario==="admin" && senha===SENHA_ADMIN){
+if(usuario === "admin" && senha === SENHA_ADMIN){
+
 sessionStorage.setItem("mitiAdmin","true");
 alert("Login realizado!");
 location.reload();
+
 }else{
 alert("Login incorreto");
 }
@@ -251,22 +267,21 @@ function irAdmin(){
 window.location.href="admin.html";
 }
 
-function salvarCarrinho(){
-localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
-atualizarCarrinho();
-}
+/* =========================
+PRODUTOS
+========================= */
 
 function carregarProdutos(){
 
-const container=document.getElementById("produtos");
-container.innerHTML="";
+const container = document.getElementById("produtos");
+container.innerHTML = "";
 
 produtos.forEach(p=>{
 
-let card=document.createElement("div");
-card.className="produto";
+let card = document.createElement("div");
+card.className = "produto";
 
-card.innerHTML=`
+card.innerHTML = `
 <div>
 <img src="${p.imagem}" onclick="abrirGaleria('${p.imagem}')">
 ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
@@ -284,17 +299,29 @@ container.appendChild(card);
 
 }
 
+/* =========================
+CARRINHO
+========================= */
+
+function salvarCarrinho(){
+localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
+atualizarCarrinho();
+}
+
 function adicionarAoCarrinho(id){
 
-const p=produtos.find(x=>x.id===id);
-if(!p || p.estoque<=0) return;
+const produto = produtos.find(x=>x.id===id);
+if(!produto || produto.estoque<=0) return;
 
-const item=carrinho.find(x=>x.id===id);
+const item = carrinho.find(x=>x.id===id);
 
-if(item){item.quantidade++;}
-else{carrinho.push({...p,quantidade:1});}
+if(item){
+item.quantidade++;
+}else{
+carrinho.push({...produto, quantidade:1});
+}
 
-p.estoque--;
+produto.estoque--;
 
 localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
 
@@ -305,24 +332,61 @@ carregarProdutos();
 
 function atualizarCarrinho(){
 
-const c=document.getElementById("itensCarrinho");
-const t=document.getElementById("totalCarrinho");
+const container = document.getElementById("itensCarrinho");
+const totalSpan = document.getElementById("totalCarrinho");
 
-c.innerHTML="";
+container.innerHTML="";
 let total=0;
 
 carrinho.forEach(item=>{
-total+=item.preco*item.quantidade;
-c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
+
+total += item.preco * item.quantidade;
+
+container.innerHTML += `
+<div style="margin-bottom:10px;border-bottom:1px solid #ddd;padding-bottom:5px">
+${item.nome} x${item.quantidade}<br>
+
+<button onclick="removerDoCarrinho(${item.id})"
+style="background:#999;margin-top:5px">
+Remover
+</button>
+
+</div>
+`;
+
 });
 
-t.innerText=total.toFixed(2);
+totalSpan.innerText = total.toFixed(2);
 
 }
 
+function removerDoCarrinho(id){
+
+const index = carrinho.findIndex(item => item.id === id);
+if(index === -1) return;
+
+const produto = produtos.find(p => p.id === id);
+
+if(produto){
+produto.estoque += carrinho[index].quantidade;
+}
+
+carrinho.splice(index,1);
+
+localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
+
+salvarCarrinho();
+carregarProdutos();
+
+}
+
+/* =========================
+FINALIZAR COMPRA
+========================= */
+
 function finalizarCompra(){
 
-if(carrinho.length===0){
+if(carrinho.length === 0){
 alert("Carrinho vazio!");
 return;
 }
@@ -331,31 +395,39 @@ let mensagem="🧵 *Pedido - mitiCosturas*\n\n";
 let total=0;
 
 carrinho.forEach(item=>{
-const subtotal=item.preco*item.quantidade;
-total+=subtotal;
-mensagem+=`• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}\n`;
+
+const subtotal = item.preco * item.quantidade;
+total += subtotal;
+
+mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}\n`;
+
 });
 
-mensagem+=`\n💰 Total: R$ ${total.toFixed(2)}\n`;
-mensagem+="\nOlá! Gostaria de finalizar este pedido 🙂";
+mensagem += `\n💰 Total: R$ ${total.toFixed(2)}\n`;
+mensagem += "\nOlá! Gostaria de finalizar este pedido 🙂";
 
 const numero="554391795143";
-const url=`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+
+const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 
 window.open(url,"_blank");
 
 mostrarQRCode(url);
 
-carrinho=[];
+carrinho = [];
 salvarCarrinho();
 
 }
 
+/* =========================
+QR CODE
+========================= */
+
 function mostrarQRCode(url){
 
-const qr=document.getElementById("qrCodeImg");
+const qr = document.getElementById("qrCodeImg");
 
-qr.src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(url);
+qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(url);
 
 document.getElementById("qrPopup").style.display="flex";
 
@@ -365,6 +437,10 @@ function fecharQR(){
 document.getElementById("qrPopup").style.display="none";
 }
 
+/* =========================
+CARRINHO UI
+========================= */
+
 function abrirCarrinho(){
 document.getElementById("carrinhoLateral").style.right="0";
 }
@@ -373,8 +449,12 @@ function fecharCarrinho(){
 document.getElementById("carrinhoLateral").style.right="-350px";
 }
 
+/* =========================
+GALERIA
+========================= */
+
 function abrirGaleria(img){
-document.getElementById("galeriaImg").src=img;
+document.getElementById("galeriaImg").src = img;
 document.getElementById("galeriaPopup").style.display="flex";
 }
 
@@ -382,10 +462,16 @@ function fecharGaleria(){
 document.getElementById("galeriaPopup").style.display="none";
 }
 
+/* =========================
+INIT
+========================= */
+
 window.onload=function(){
+
 verificarAdmin();
 carregarProdutos();
 atualizarCarrinho();
+
 }
 
 </script>
