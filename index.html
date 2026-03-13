@@ -8,9 +8,7 @@
 
 <style>
 
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box;}
 
 body{
 font-family:Arial,sans-serif;
@@ -42,9 +40,7 @@ color:#fff;
 cursor:pointer
 }
 
-button:hover{
-background:#ff4c4c
-}
+button:hover{background:#ff4c4c}
 
 /* PRODUTOS */
 
@@ -70,11 +66,8 @@ gap:10px
 width:60px;
 height:60px;
 border-radius:5px;
-object-fit:cover
-}
-
-.produto button{
-min-width:100px
+object-fit:cover;
+cursor:pointer
 }
 
 /* CARRINHO */
@@ -89,7 +82,7 @@ background:#fff;
 box-shadow:-2px 0 10px rgba(0,0,0,.3);
 padding:20px;
 overflow-y:auto;
-transition:0.3s;
+transition:.3s;
 z-index:1000
 }
 
@@ -112,18 +105,14 @@ display:none
 
 @media (max-width:600px){
 
-body{
-padding:10px
-}
+body{padding:10px}
 
 .produto{
 flex-direction:column;
 align-items:flex-start
 }
 
-.produto button{
-width:100%
-}
+.produto button{width:100%}
 
 #carrinhoLateral{
 width:85%;
@@ -139,7 +128,6 @@ right:20px
 }
 
 </style>
-
 </head>
 
 <body>
@@ -152,6 +140,8 @@ right:20px
 
 <h2>Produtos</h2>
 <div id="produtos"></div>
+
+<!-- CARRINHO -->
 
 <div id="carrinhoLateral">
 
@@ -183,24 +173,47 @@ background:rgba(0,0,0,0.6);
 display:none;
 align-items:center;
 justify-content:center;
-z-index:2000
-">
+z-index:2000">
 
 <div style="
 background:white;
 padding:20px;
 border-radius:10px;
 text-align:center;
-max-width:300px;
-">
+max-width:300px">
 
 <h3>Escaneie para falar no WhatsApp</h3>
 
-<img id="qrCodeImg" src="" style="width:200px;height:200px">
+<img id="qrCodeImg" style="width:200px;height:200px">
 
 <br><br>
 
 <button onclick="fecharQR()">Fechar</button>
+
+</div>
+</div>
+
+<!-- GALERIA -->
+
+<div id="galeriaPopup" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:3000">
+
+<div style="text-align:center">
+
+<img id="galeriaImg" style="max-width:90%;max-height:80vh;border-radius:10px">
+
+<br><br>
+
+<button onclick="fecharGaleria()">Fechar</button>
 
 </div>
 </div>
@@ -219,39 +232,17 @@ document.getElementById("adminBtn").style.display="inline-block";
 }
 }
 
-function mostrarQRCode(url){
-
-const qr = document.getElementById("qrCodeImg");
-
-qr.src =
-"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
-+ encodeURIComponent(url);
-
-document.getElementById("qrPopup").style.display="flex";
-
-}
-
-function fecharQR(){
-document.getElementById("qrPopup").style.display="none";
-}
-
 function loginAdmin(){
 
 const usuario = prompt("Usuário:");
 const senha = prompt("Senha:");
 
-if(usuario === "admin" && senha === SENHA_ADMIN){
-
+if(usuario==="admin" && senha===SENHA_ADMIN){
 sessionStorage.setItem("mitiAdmin","true");
-
 alert("Login realizado!");
-
 location.reload();
-
 }else{
-
 alert("Login incorreto");
-
 }
 
 }
@@ -261,28 +252,23 @@ window.location.href="admin.html";
 }
 
 function salvarCarrinho(){
-
 localStorage.setItem("mitiCarrinho", JSON.stringify(carrinho));
-
 atualizarCarrinho();
-
 }
 
 function carregarProdutos(){
 
-const container = document.getElementById("produtos");
-
+const container=document.getElementById("produtos");
 container.innerHTML="";
 
 produtos.forEach(p=>{
 
 let card=document.createElement("div");
-
 card.className="produto";
 
 card.innerHTML=`
 <div>
-<img src="${p.imagem}">
+<img src="${p.imagem}" onclick="abrirGaleria('${p.imagem}')">
 ${p.nome} - R$ ${p.preco.toFixed(2)} - Estoque: ${p.estoque}
 </div>
 
@@ -301,23 +287,18 @@ container.appendChild(card);
 function adicionarAoCarrinho(id){
 
 const p=produtos.find(x=>x.id===id);
-
 if(!p || p.estoque<=0) return;
 
 const item=carrinho.find(x=>x.id===id);
 
-if(item){
-item.quantidade++;
-}else{
-carrinho.push({...p,quantidade:1});
-}
+if(item){item.quantidade++;}
+else{carrinho.push({...p,quantidade:1});}
 
 p.estoque--;
 
 localStorage.setItem("mitiProdutos", JSON.stringify(produtos));
 
 salvarCarrinho();
-
 carregarProdutos();
 
 }
@@ -325,74 +306,63 @@ carregarProdutos();
 function atualizarCarrinho(){
 
 const c=document.getElementById("itensCarrinho");
-
 const t=document.getElementById("totalCarrinho");
 
 c.innerHTML="";
-
 let total=0;
 
 carrinho.forEach(item=>{
-
 total+=item.preco*item.quantidade;
-
 c.innerHTML+=`${item.nome} x${item.quantidade}<br>`;
-
 });
 
 t.innerText=total.toFixed(2);
 
 }
 
-function salvarPedido(pedido){
-
-let pedidos = JSON.parse(localStorage.getItem("mitiPedidos")) || [];
-
-pedidos.push(pedido);
-
-localStorage.setItem("mitiPedidos", JSON.stringify(pedidos));
-
-}
-
 function finalizarCompra(){
 
-if(carrinho.length === 0){
+if(carrinho.length===0){
 alert("Carrinho vazio!");
 return;
 }
 
-let mensagem = "🧵 *Pedido - mitiCosturas* %0A%0A";
-let total = 0;
+let mensagem="🧵 *Pedido - mitiCosturas*\n\n";
+let total=0;
 
 carrinho.forEach(item=>{
-
-const subtotal = item.preco * item.quantidade;
-
-total += subtotal;
-
-mensagem += `• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}%0A`;
-
+const subtotal=item.preco*item.quantidade;
+total+=subtotal;
+mensagem+=`• ${item.nome} x${item.quantidade} - R$ ${subtotal.toFixed(2)}\n`;
 });
 
-mensagem += `%0A💰 *Total:* R$ ${total.toFixed(2)}%0A`;
-mensagem += "%0AOlá! Gostaria de finalizar este pedido 🙂";
+mensagem+=`\n💰 Total: R$ ${total.toFixed(2)}\n`;
+mensagem+="\nOlá! Gostaria de finalizar este pedido 🙂";
 
-const pedido = {
-data: new Date().toLocaleString(),
-itens: carrinho,
-total: total
-};
+const numero="554391795143";
+const url=`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 
-salvarPedido(pedido);
-
-const numero = "554391795143";
-const url = `https://wa.me/${numero}?text=${mensagem}`;
+window.open(url,"_blank");
 
 mostrarQRCode(url);
 
-carrinho = [];
+carrinho=[];
 salvarCarrinho();
 
+}
+
+function mostrarQRCode(url){
+
+const qr=document.getElementById("qrCodeImg");
+
+qr.src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(url);
+
+document.getElementById("qrPopup").style.display="flex";
+
+}
+
+function fecharQR(){
+document.getElementById("qrPopup").style.display="none";
 }
 
 function abrirCarrinho(){
@@ -401,6 +371,15 @@ document.getElementById("carrinhoLateral").style.right="0";
 
 function fecharCarrinho(){
 document.getElementById("carrinhoLateral").style.right="-350px";
+}
+
+function abrirGaleria(img){
+document.getElementById("galeriaImg").src=img;
+document.getElementById("galeriaPopup").style.display="flex";
+}
+
+function fecharGaleria(){
+document.getElementById("galeriaPopup").style.display="none";
 }
 
 window.onload=function(){
